@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Video Editor & Content Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef0f4;--bg-grad:radial-gradient(1100px 700px at 12% -10%,#fff 0%,transparent 60%),radial-gradient(900px 600px at 100% 25%,#dde2ea 0%,transparent 55%),linear-gradient(180deg,#eef0f4,#cdd2da);
+  --surface:rgba(255,255,255,.7);--text:#0a0b0e;--muted:#5d6370;--line:#cfd3dc;--accent:#0a0b0e;--on-accent:#fff;--hot:#0a0b0e;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07080a;--bg-grad:radial-gradient(1200px 750px at 12% -10%,#2b313c 0%,transparent 60%),radial-gradient(900px 600px at 100% 25%,#1b212b 0%,transparent 55%),linear-gradient(180deg,#0d0f13,#040506);--surface:rgba(255,255,255,.04);--text:#f4f5f7;--muted:#9aa0ac;--line:#272b34;--accent:#fff;--on-accent:#0a0b0e;--hot:#fff}}
+:root[data-theme="dark"]{--bg:#07080a;--bg-grad:radial-gradient(1200px 750px at 12% -10%,#2b313c 0%,transparent 60%),radial-gradient(900px 600px at 100% 25%,#1b212b 0%,transparent 55%),linear-gradient(180deg,#0d0f13,#040506);--surface:rgba(255,255,255,.04);--text:#f4f5f7;--muted:#9aa0ac;--line:#272b34;--accent:#fff;--on-accent:#0a0b0e;--hot:#fff}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;min-height:100vh;color:var(--text);font-family:var(--body);line-height:1.6;font-size:1rem}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{width:min(1120px,100% - 2.5rem);margin-inline:auto}
+
+/* header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:1rem;height:64px}
+.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;font-family:var(--display);font-weight:700;margin-right:auto;white-space:nowrap}
+.avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:var(--line);border:1px solid var(--line)}
+nav{display:flex;gap:.25rem}
+nav a{text-decoration:none;color:var(--muted);padding:.4rem .75rem;border-radius:999px;font-size:.92rem;font-weight:500}
+nav a:hover{color:var(--text);background:var(--surface)}
+.btn{display:inline-block;text-decoration:none;font-weight:500;padding:.75rem 1.4rem;border-radius:999px;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--line)}
+.btn.small{padding:.5rem 1.1rem;font-size:.9rem}
+@media (max-width:720px){nav{display:none}}
+
+/* hero */
+.hero{padding:5rem 0 3rem}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,8vw,5.6rem);line-height:1;letter-spacing:-.035em;max-width:12ch}
+.hero p{color:var(--muted);font-size:1.2rem;max-width:34rem;margin:1.4rem 0 2rem}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem}
+
+/* timeline: the hero's signature, each track links to a section */
+.timeline{margin-top:4rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1rem 1rem 1rem 0;position:relative;overflow:hidden}
+.track{display:grid;grid-template-columns:5.5rem 1fr;align-items:center;gap:.5rem;padding:.35rem 0}
+.track>span{font-size:.8rem;color:var(--muted);text-align:right;padding-right:.5rem}
+.clips{display:flex;gap:4px;height:38px}
+.clip{display:block;border-radius:6px;background:var(--accent);opacity:.9;text-decoration:none;color:var(--on-accent);font-size:.75rem;padding:.55rem .6rem;overflow:hidden;white-space:nowrap;transition:opacity .2s}
+.clip:hover{opacity:1;filter:brightness(1.1)}
+.clip.b{opacity:.6}.clip.c{opacity:.35}
+.playhead{position:absolute;top:0;bottom:0;left:6rem;width:2px;background:var(--hot);animation:scrub 4s cubic-bezier(.6,0,.3,1) 1 forwards}
+.playhead::before{content:"";position:absolute;top:0;left:-5px;border:6px solid transparent;border-top-color:var(--hot);border-width:8px 6px 0}
+@keyframes scrub{from{left:6rem}to{left:calc(100% - 1.5rem)}}
+@media (prefers-reduced-motion:reduce){.playhead{animation:none;left:40%}}
+
+/* sections */
+section{padding:4.5rem 0 1rem}
+.head{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;margin-bottom:2rem}
+.head h2{font-family:var(--display);font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.025em;line-height:1.1}
+.head p{color:var(--muted);max-width:30rem}
+
+.thumb{display:block;position:relative;border-radius:12px;overflow:hidden;background:var(--line) center/cover no-repeat;border:1px solid var(--line)}
+.thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.play{position:absolute;z-index:1;top:50%;left:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;transition:transform .2s}
+.play::before{content:"";border-left:16px solid #16141f;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.card:hover .play{transform:scale(1.1)}
+.tag{position:absolute;z-index:1;right:.6rem;bottom:.6rem;font-size:.75rem;color:#fff;background:rgba(0,0,0,.6);padding:.1rem .5rem;border-radius:4px}
+.card h3{font-family:var(--display);font-size:1.05rem;margin-top:.7rem;line-height:1.3}
+.card p{color:var(--muted);font-size:.9rem}
+.card{text-decoration:none;display:block}
+
+/* shorts: vertical, swipeable row */
+.shorts{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,22%);gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:1rem;-webkit-overflow-scrolling:touch}
+.shorts .card{scroll-snap-align:start}
+.shorts .thumb{aspect-ratio:9/16}
+@media (max-width:720px){.shorts{grid-auto-columns:62%}}
+
+/* youtube: 16:9 grid */
+.yt{display:grid;grid-template-columns:repeat(3,1fr);gap:1.75rem 1.25rem}
+.yt .thumb{aspect-ratio:16/9}
+@media (max-width:900px){.yt{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.yt{grid-template-columns:1fr}}
+
+/* other: wide featured card, then two equal cards (same sizes on every screen) */
+.other{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.75rem 1.25rem}
+.other .feature{grid-column:1/-1}
+.other .thumb{aspect-ratio:16/9;width:100%}
+.other .feature .thumb{aspect-ratio:21/9}
+.other .overlay{position:absolute;z-index:1;left:1.25rem;right:1.25rem;bottom:1.1rem;color:#fff}
+.other .overlay h3{margin:0;font-size:clamp(1.1rem,2.4vw,1.5rem)}
+.other .overlay p{color:rgba(255,255,255,.8)}
+@media (max-width:640px){
+  .other{grid-template-columns:1fr}
+  .other .feature .thumb{aspect-ratio:16/9}
+  .play{width:44px;height:44px;margin:-22px 0 0 -22px}
+}
+
+/* about + contact */
+.about p{font-family:var(--display);font-size:clamp(1.4rem,3vw,2.1rem);line-height:1.35;letter-spacing:-.015em;max-width:44rem}
+.skills{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.75rem}
+.skills li{list-style:none;border:1px solid var(--line);background:var(--surface);padding:.4rem 1rem;border-radius:999px;font-size:.92rem}
+.contact{text-align:center;padding:6rem 0 4rem}
+.contact h2{font-family:var(--display);font-size:clamp(2rem,6vw,4rem);letter-spacing:-.03em;line-height:1.05}
+.contact p{color:var(--muted);margin:1rem 0 2rem}
+.links{display:flex;justify-content:center;flex-wrap:wrap;gap:.9rem;margin-top:2rem}
+.links a{width:50px;height:50px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--muted);background:var(--surface);transition:all .2s}
+.links a:hover{color:var(--on-accent);background:var(--accent);border-color:var(--accent);transform:translateY(-3px)}
+.links svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+footer{border-top:1px solid var(--line);padding:1.5rem 0;color:var(--muted);font-size:.85rem;text-align:center}
+
+/* placeholder thumbnails: replace with background-image:url(...) on each .thumb */
+.g1{background-image:linear-gradient(135deg,#4a5160,#12141a)}.g2{background-image:linear-gradient(135deg,#2f3540,#0b0c10)}
+.g3{background-image:linear-gradient(135deg,#6b7280,#1a1d24)}.g4{background-image:linear-gradient(135deg,#232830,#080a0d)}
+.g5{background-image:linear-gradient(135deg,#565d6b,#101217)}.g6{background-image:linear-gradient(135deg,#394049,#0d0f13)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a href="#top" class="brand">
+      <img class="avatar" src="your-profile-photo.jpg" alt="" onerror="this.style.visibility='hidden'">
+      Your Name
+    </a>
+    <nav aria-label="Sections">
+      <a href="#shorts">Shorts</a>
+      <a href="#youtube">YouTube</a>
+      <a href="#other">Other work</a>
+      <a href="#about">About</a>
+    </nav>
+    <a href="#contact" class="btn small">Get in touch</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <h1>Video editor & content creator</h1>
+    <p>I turn raw footage into stories people finish watching, from 30-second shorts to full YouTube episodes.</p>
+    <div class="cta">
+      <a href="#youtube" class="btn">Watch my work</a>
+      <a href="#contact" class="btn ghost">Start a project</a>
+    </div>
+
+    <div class="timeline" aria-label="Jump to a section">
+      <div class="playhead" aria-hidden="true"></div>
+      <div class="track"><span>Shorts</span><div class="clips"><a class="clip" style="flex:2" href="#shorts">Vertical edits</a><a class="clip b" style="flex:1" href="#shorts"></a><a class="clip" style="flex:3" href="#shorts"></a></div></div>
+      <div class="track"><span>YouTube</span><div class="clips"><a class="clip b" style="flex:4" href="#youtube">Long-form videos</a><a class="clip" style="flex:2" href="#youtube"></a></div></div>
+      <div class="track"><span>Other</span><div class="clips"><a class="clip c" style="flex:1" href="#other"></a><a class="clip b" style="flex:3" href="#other">Ads, cinematic, events</a></div></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="shorts">
+      <div class="head">
+        <h2>Shorts</h2>
+        <p>Fast, vertical edits for Reels, TikTok and YouTube Shorts. Swipe to see more.</p>
+      </div>
+      <div class="shorts">
+        <!-- Replace href with your video link; add style="background-image:url(thumb.jpg)" to .thumb -->
+        <a class="card" href="#"><span class="thumb g1"><span class="play"></span><span class="tag">0:28</span></span><h3>Short title one</h3><p>Reels · Hook-driven</p></a>
+        <a class="card" href="#"><span class="thumb g2"><span class="play"></span><span class="tag">0:45</span></span><h3>Short title two</h3><p>TikTok · Captions</p></a>
+        <a class="card" href="#"><span class="thumb g3"><span class="play"></span><span class="tag">0:19</span></span><h3>Short title three</h3><p>Shorts · Motion text</p></a>
+        <a class="card" href="#"><span class="thumb g4"><span class="play"></span><span class="tag">0:52</span></span><h3>Short title four</h3><p>Reels · Storytelling</p></a>
+        <a class="card" href="#"><span class="thumb g5"><span class="play"></span><span class="tag">0:33</span></span><h3>Short title five</h3><p>TikTok · Product</p></a>
+      </div>
+    </section>
+
+    <section id="youtube">
+      <div class="head">
+        <h2>YouTube videos</h2>
+        <p>Long-form edits with pacing, sound design and retention in mind.</p>
+      </div>
+      <div class="yt">
+        <a class="card" href="#"><span class="thumb g1"><span class="play"></span><span class="tag">12:40</span></span><h3>Video title one</h3><p>Vlog · Full edit and color</p></a>
+        <a class="card" href="#"><span class="thumb g2"><span class="play"></span><span class="tag">8:15</span></span><h3>Video title two</h3><p>Tutorial · Graphics and sound</p></a>
+        <a class="card" href="#"><span class="thumb g3"><span class="play"></span><span class="tag">21:02</span></span><h3>Video title three</h3><p>Documentary · Story structure</p></a>
+        <a class="card" href="#"><span class="thumb g4"><span class="play"></span><span class="tag">10:33</span></span><h3>Video title four</h3><p>Commentary · B-roll and pacing</p></a>
+        <a class="card" href="#"><span class="thumb g5"><span class="play"></span><span class="tag">15:48</span></span><h3>Video title five</h3><p>Interview · Multi-cam</p></a>
+        <a class="card" href="#"><span class="thumb g6"><span class="play"></span><span class="tag">9:27</span></span><h3>Video title six</h3><p>Review · Motion graphics</p></a>
+      </div>
+    </section>
+
+    <section id="other">
+      <div class="head">
+        <h2>Other work</h2>
+        <p>Commercials, cinematic pieces, events and anything that doesn't fit a feed.</p>
+      </div>
+      <div class="other">
+        <a class="card feature" href="#"><span class="thumb g4"><span class="play"></span><span class="overlay"><h3>Brand film title</h3><p>Commercial · Edit, grade, sound</p></span></span></a>
+        <a class="card" href="#"><span class="thumb g5"><span class="play"></span><span class="tag">2:10</span></span><h3>Cinematic piece</h3><p>Travel · Color grade</p></a>
+        <a class="card" href="#"><span class="thumb g6"><span class="play"></span><span class="tag">4:30</span></span><h3>Event recap</h3><p>Highlights · Multi-cam</p></a>
+      </div>
+    </section>
+
+    <section id="about" class="about">
+      <div class="head"><h2>About</h2></div>
+      <p>I'm a video editor focused on clean, engaging content. I combine storytelling, pacing, sound and visual design to turn footage into videos that connect with an audience.</p>
+      <ul class="skills">
+        <li>Video editing</li><li>YouTube editing</li><li>Short-form content</li><li>Promotional videos</li><li>Color grading</li><li>Sound design</li>
+      </ul>
+    </section>
+
+    <section id="contact" class="contact">
+      <h2>Let's work together</h2>
+      <p>Have a project in mind? Tell me about it and I'll reply soon.</p>
+      <a href="mailto:yourname@email.com" class="btn">Start a project</a>
+      <div class="links">
+        <a href="mailto:yourname@email.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
+        <a href="#" aria-label="Telegram" title="Telegram"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></a>
+        <a href="#" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></svg></a>
+        <a href="#" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><path d="m9.75 15.02 5.75-3.27-5.75-3.27z"/></svg></a>
+        <a href="#" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer><div class="wrap">© Your Name</div></footer>
+</body>
+</html>

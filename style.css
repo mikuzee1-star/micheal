@@ -1063,11 +1063,22 @@ footer {
 .player[open] { animation: pop .3s cubic-bezier(.2, .8, .25, 1); }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97); } }
 
-.player[data-orient="vertical"] { width: min(430px, 92vw); }
+/* vertical (shorts) player: as tall as the screen allows, never cropped */
+.player[data-orient="vertical"] {
+  --pw: min(88vw, calc((100vh - 150px) * 9 / 16), 560px);   /* video width from available height */
+  width: max(var(--pw), min(430px, 92vw));
+  max-height: calc(100vh - 20px);
+}
+@supports (height: 100dvh) {
+  .player[data-orient="vertical"] {
+    --pw: min(88vw, calc((100dvh - 150px) * 9 / 16), 560px);
+    max-height: calc(100dvh - 20px);
+  }
+}
 
 .player-media { position: relative; aspect-ratio: 16 / 9; background: #000; }
 .player[data-orient="vertical"] .player-media {
-  width: calc(min(64vh, 620px) * 9 / 16);
+  width: var(--pw);
   aspect-ratio: 9 / 16;
   margin-inline: auto;
 }

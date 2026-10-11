@@ -402,7 +402,7 @@ nav.primary a.active { color: var(--text); background: var(--surface); }
   transform: scale(1);
   transition: filter 0.4s ease, transform 0.4s ease;
 }
-
+.hero-frame img:active,
 .hero-frame img:hover {
   filter: grayscale(0%);
   transform: scale(1.01);

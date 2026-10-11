@@ -398,6 +398,12 @@ nav.primary a.active { color: var(--text); background: var(--surface); }
   height: 100%;
   object-fit: cover;
   border-radius: 14px;
+  filter: grayscale();
+  transition: all linear 1;
+}
+
+.hero-frame img:hover {
+  filter: none;
 }
 
 /* floating deco icons hugging the frame */

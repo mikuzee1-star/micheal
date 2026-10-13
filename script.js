@@ -171,11 +171,12 @@
       const list = u.searchParams.get('list');
 
       if (id && YT_ID.test(id)) {
-        const q = new URLSearchParams({ autoplay: 1, rel: 0, playsinline: 1 });
+        const q = new URLSearchParams({ autoplay: 1, rel: 0, playsinline: 1, enablejsapi: 1 });
+        if (/^https?:$/.test(location.protocol)) q.set('origin', location.origin);
         if (start) q.set('start', start);
         return {
-          kind: 'youtube', vertical,
-          embed: `https://www.youtube-nocookie.com/embed/${id}?${q}`,
+          kind: 'youtube', vertical, id,
+          embed: `https://www.youtube.com/embed/${id}?${q}`,
           watch: vertical ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}${start ? '&t=' + start + 's' : ''}`,
           thumbs: [`https://i.ytimg.com/vi/${id}/mqdefault.jpg`, `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`]
         };
@@ -241,7 +242,7 @@
 
   $$('a.card').forEach(card => {
     const thumb = card.querySelector('.thumb');
-    if (!thumb) return;
+    if (!thumb || card.classList.contains('hero-reel')) return;
 
     if (card.dataset.thumb) { setThumb(thumb, card.dataset.thumb); return; }
     if (thumb.style.backgroundImage) return;
@@ -320,6 +321,17 @@
       media.appendChild(ph);
     };
 
+    let ytFrame = null;
+    addEventListener('message', e => {
+      if (!ytFrame || e.source !== ytFrame.contentWindow || !/youtube/.test(e.origin)) return;
+      let d = e.data;
+      try { if (typeof d === 'string') d = JSON.parse(d); } catch { return; }
+      if (d && d.event === 'onError') {
+        placeholder('This video can’t be played here — use the “Watch on YouTube” button instead.');
+        ytFrame = null;
+      }
+    });
+
     document.addEventListener('click', e => {
       const card = e.target.closest('a.card');
       if (!card || card.dataset.noLightbox) return;
@@ -353,6 +365,14 @@
         frame.allowFullscreen = true;
         frame.referrerPolicy = 'strict-origin-when-cross-origin';
         media.appendChild(frame);
+
+        // YouTube: ask the player to report errors (embedding disabled, private video…) and show a clear fallback
+        if (src.kind === 'youtube') {
+          frame.addEventListener('load', () => {
+            try { frame.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), '*'); } catch {}
+          });
+          ytFrame = frame;
+        }
         // some videos have embedding disabled (or the page runs from file://) — always offer the original
         showLink(src.watch, { youtube: 'Watch on YouTube', vimeo: 'Watch on Vimeo', tiktok: 'Watch on TikTok' }[src.kind], true);
 
@@ -385,9 +405,29 @@
     $('#playerClose').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => {
+      ytFrame = null;
       const video = media.querySelector('video');
       if (video) video.pause();
       media.textContent = ''; // removing the iframe also stops YouTube/Vimeo playback
+    });
+  }
+
+  /* ---------- Hero: tilt the 3D frame toward the pointer ---------- */
+  const heroMedia = $('.hero-media');
+  const tilt = $('.hero-tilt');
+  if (heroMedia && tilt && !reduced && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    heroMedia.addEventListener('pointermove', e => {
+      const r = heroMedia.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5;   // -.5 … .5
+      const y = (e.clientY - r.top) / r.height - .5;
+      tilt.classList.add('is-moving');
+      tilt.style.setProperty('--ry', (-18 + x * 14).toFixed(2) + 'deg');
+      tilt.style.setProperty('--rx', (9 - y * 12).toFixed(2) + 'deg');
+    });
+    heroMedia.addEventListener('pointerleave', () => {
+      tilt.classList.remove('is-moving');
+      tilt.style.removeProperty('--ry');
+      tilt.style.removeProperty('--rx');
     });
   }
 

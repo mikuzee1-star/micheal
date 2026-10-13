@@ -198,8 +198,8 @@ header:has(.mobile-menu:not([hidden])) {
 /* avatar with monogram fallback while no photo is set */
 .avatar-wrap {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
   flex: none;
 }
 .avatar-fallback {
@@ -212,7 +212,7 @@ header:has(.mobile-menu:not([hidden])) {
   color: var(--on-accent);
   font-family: var(--display);
   font-weight: 700;
-  font-size: .95rem;
+  font-size: 1.1rem;
   user-select: none;
 }
 .avatar {
@@ -222,6 +222,7 @@ header:has(.mobile-menu:not([hidden])) {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center 20%;   /* keep the face in the circle */
   background: var(--line);
   border: 1px solid var(--line);
 }
@@ -229,8 +230,8 @@ header:has(.mobile-menu:not([hidden])) {
   position: absolute;
   right: -1px;
   bottom: -1px;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--ok);
   border: 2px solid var(--bg);
@@ -363,7 +364,7 @@ nav.primary a.active { color: var(--text); background: var(--surface); }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
   gap: clamp(2rem, 5vw, 4.5rem);
   align-items: center;
 }
@@ -538,6 +539,13 @@ nav.primary a.active { color: var(--text); background: var(--surface); }
   font-size: 1.15rem;
   max-width: 34rem;
   margin: 1.5rem 0 2.2rem;
+}
+
+/* the eyebrow is a <p>, so it was inheriting the big hero paragraph size — keep it small */
+.hero-copy > p.eyebrow {
+  font-size: .64rem;
+  max-width: none;
+  margin: 0 0 1.25rem;
 }
 
 .cta { display: flex; flex-wrap: wrap; gap: .8rem; }
@@ -1201,4 +1209,106 @@ html.js .reveal.in { opacity: 1; transform: none; }
   .fade { animation: none; }
   html.js .reveal { opacity: 1; transform: none; transition: none; }
   .playhead { animation: none; left: 40%; }
+}
+
+/* ---------- Hero: 3D-tilted video frame ---------- */
+.hero-media { perspective: 1200px; align-items: center; }
+.hero-tilt {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  transform-style: preserve-3d;
+  transform: rotateY(var(--ry, -18deg)) rotateX(var(--rx, 9deg)) rotateZ(var(--rz, 1.5deg));
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+  will-change: transform;
+}
+.hero-tilt.is-moving { transition: transform .08s linear; }
+
+/* stacked "cards" behind the frame for depth */
+.hero-tilt::before,
+.hero-tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  pointer-events: none;
+}
+.hero-tilt::before { transform: translateZ(-40px) translate(18px, 18px); opacity: .7; }
+.hero-tilt::after  { transform: translateZ(-80px) translate(36px, 36px); opacity: .4; }
+
+.hero-reel { position: relative; transform-style: preserve-3d; }
+.hero-reel .thumb {
+  background: linear-gradient(135deg, #39404d, #0e1117);
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, #fff);
+  overflow: hidden;
+  box-shadow: 0 50px 80px -30px rgba(0, 0, 0, .55), 0 18px 30px -18px rgba(0, 0, 0, .4);
+}
+.hero-reel:hover .thumb { transform: none; box-shadow: 0 60px 90px -30px rgba(0, 0, 0, .6), 0 18px 30px -18px rgba(0, 0, 0, .4); }
+.hero-reel .thumb::after { background: linear-gradient(to top, rgba(0, 0, 0, .45), rgba(0, 0, 0, .08) 60%); }
+
+.hero-reel .play {
+  width: 84px;
+  height: 84px;
+  margin: -42px 0 0 -42px;
+  transform: translateZ(60px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+}
+.hero-reel .play::before {
+  border-left-width: 24px;
+  border-top-width: 15px;
+  border-bottom-width: 15px;
+  margin-left: 6px;
+}
+.hero-reel:hover .play { transform: translateZ(60px) scale(1.1); }
+
+.reel-bar {
+  position: absolute;
+  z-index: 1;
+  top: .85rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .68rem;
+  letter-spacing: .14em;
+  color: #fff;
+}
+.reel-bar i { width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; animation: reelblink 1.4s steps(2, jump-none) infinite; }
+@keyframes reelblink { 50% { opacity: .25; } }
+
+.reel-scrub {
+  position: absolute;
+  z-index: 1;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .3);
+  overflow: hidden;
+}
+.reel-scrub b {
+  display: block;
+  height: 100%;
+  width: 38%;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.hero-tilt .floaty.clap { transform: rotate(var(--rot, 0deg)) translateZ(70px); }
+.hero-tilt .floaty.vid  { transform: rotate(var(--rot, 0deg)) translateZ(70px); }
+
+@media (max-width: 900px) {
+  .hero-tilt { max-width: 400px; --ry: -10deg; --rx: 6deg; }
+  .hero-tilt::before { transform: translateZ(-30px) translate(12px, 12px); }
+  .hero-tilt::after  { transform: translateZ(-60px) translate(24px, 24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-tilt, .hero-tilt.is-moving { transition: none; }
+  .reel-bar i { animation: none; }
 }
